@@ -10,7 +10,7 @@ const app = Fastify({
 
 app.register(require("@fastify/formbody"));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const TARGET_API_URL = process.env.TARGET_API_URL;
 const TIMELINE_FILE = "enhanced_messages.json";
 const TIMESTAMP_DB_FILE = "./message_timestamps.json";
