@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const TIMELINE_PATH = path.join(__dirname, "enhanced_messages.json");
-const GATEWAY_URL = "http://localhost:3000/internal/wake-event";
+const GATEWAY_URL = `http://localhost:${process.env.PORT || 3000}/internal/wake-event`;
+
 
 function getNow() {
   return new Date();
@@ -278,7 +279,7 @@ async function scheduleNextCheck() {
   try {
     // 发送心跳
     try {
-      await fetch("http://localhost:3000/internal/heartbeat", { method: "POST" });
+      await fetch(`http://localhost:${process.env.PORT || 3000}/internal/heartbeat`, { method: "POST" });
     } catch {}
     await runWakeUp();
   } catch (err) {
