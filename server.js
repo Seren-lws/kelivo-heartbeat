@@ -226,14 +226,10 @@ function savePresets(presets) {
 }
 
 // ========================
-// 安全：放行 /admin，其他仅本地/局域网
+// 安全：云端部署放行所有请求，admin 路由用密码保护
 // ========================
 app.addHook("onRequest", (req, reply, done) => {
-  if (req.url.startsWith("/admin")) return done();
-  const ip = req.ip || req.connection.remoteAddress;
-  if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost") return done();
-  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(ip)) return done();
-  reply.code(403).send("Forbidden");
+  done();
 });
 
 // ========================
