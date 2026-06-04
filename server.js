@@ -379,7 +379,9 @@ app.post("/v1/chat/completions", async (req, reply) => {
       llmMessages.splice(idx, 1);
     }
 
-    // 请求模型
+        // 请求模型
+    console.log(`\n🔵 正在请求 API: ${TARGET_API_URL}`);
+    console.log(`🔵 模型: ${body.model || "未指定"}`);
     const response = await fetch(TARGET_API_URL, {
       method: "POST",
       headers: {
@@ -389,7 +391,25 @@ app.post("/v1/chat/completions", async (req, reply) => {
       body: JSON.stringify({ ...body, messages: llmMessages })
     });
 
-    reply.raw.writeHead(response.status, {
+    console.log(`🟡 API 返回状态码: ${response.status}`);
+
+    // 非 200 响应：读取完整错误体，以 JSON 格式返回（不套 SSE）
+    if (response.status !== 200) {
+      let errorBody = "";
+      try {
+        errorBody = await response.text();
+      } catch (e) {
+        errorBody = `(无法读取响应体: ${e.message})`;
+      }
+      console.error(`🔴 API 错误: ${response.status} ${response.statusText}\n${errorBody}`);
+      return reply.code(502).send({
+        error: `上游 API 返回 ${response.status}`,
+        status: response.status,
+        detail: errorBody
+      });
+    }
+
+    reply.raw.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive"
