@@ -270,8 +270,27 @@ app.post("/v1/chat/completions", async (req, reply) => {
     }
     if (tsDBDirty) saveTimestampDB(tsDB);
 
-    const finalTimeline = buildTimeline(kelivoMessages, tsDB);
-    saveTimeline(finalTimeline);
+      const finalTimeline = buildTimeline(kelivoMessages, tsDB);
+    // 为用户消息加上时间戳前缀（供 wake_up.js 读取最后活跃时间）
+    const timelineWithTs = finalTimeline.map(msg => {
+      if (msg.role !== "user") return msg;
+      if (typeof msg.content !== "string") return msg;
+      const ts = extractTimestampWithMemory(msg, tsDB);
+      if (ts) {
+        const y = ts.getFullYear();
+        const M = String(ts.getMonth() + 1).padStart(2, "0");
+        const d = String(ts.getDate()).padStart(2, "0");
+        const h = String(ts.getHours()).padStart(2, "0");
+        const m = String(ts.getMinutes()).padStart(2, "0");
+        const prefix = `${y}-${M}-${d} ${h}:${m}`;
+        if (!msg.content.startsWith(prefix)) {
+          return { ...msg, content: `${prefix} ${msg.content}` };
+        }
+      }
+      return msg;
+    });
+    saveTimeline(timelineWithTs);
+
 
     // 过滤图片消息，只保留纯文本
     const llmMessages = kelivoMessages.filter(msg => {
