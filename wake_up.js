@@ -96,11 +96,27 @@ async function runWakeUp() {
   const raw = fs.readFileSync(TIMELINE_PATH, "utf-8");
   let messages = JSON.parse(raw);
 
-  const lastUserTime = getLastUserTime(messages);
+  let lastUserTime = getLastUserTime(messages);
+  
+  // 如果找不到用户时间戳，用文件修改时间作为后备
   if (!lastUserTime) {
-    console.log("未找到用户时间");
-    return;
+    try {
+      const stats = fs.statSync(TIMELINE_PATH);
+      lastUserTime = stats.mtime;
+      const now = new Date();
+      const diffFromFile = Math.floor((now - lastUserTime) / 1000 / 60);
+      if (diffFromFile >= 10) {
+        console.log(`⚠️ 未找到用户时间戳，使用文件修改时间作为后备（${diffFromFile} 分钟前）`);
+      } else {
+        console.log(`未找到用户时间（文件太新，${diffFromFile} 分钟前修改，跳过）`);
+        return;
+      }
+    } catch (e) {
+      console.log("未找到用户时间");
+      return;
+    }
   }
+
 
   const now = new Date();
   const diffMinutes = Math.floor((now - lastUserTime) / 1000 / 60);
