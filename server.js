@@ -4,9 +4,10 @@ const Fastify = require("fastify");
 const fs = require("fs-extra");
 
 const app = Fastify({
-  logger: true,
+  logger: { level: "warn" },  // ← 只打警告和错误
   bodyLimit: 10 * 1024 * 1024
 });
+
 
 app.register(require("@fastify/formbody"));
 
